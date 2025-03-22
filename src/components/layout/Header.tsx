@@ -1,14 +1,33 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, BookOpen } from 'lucide-react';
+import { Menu, X, User, BookOpen, LogOut } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+// Simple interface for user data
+interface UserData {
+  name: string;
+  email: string;
+  isLoggedIn: boolean;
+}
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const navigation = [
     { name: 'Home', href: '/' },
@@ -16,6 +35,28 @@ const Header = () => {
     { name: 'Instructors', href: '/instructors' },
     { name: 'About', href: '/about' },
   ];
+
+  // Check for user data in localStorage on component mount
+  useEffect(() => {
+    const checkUserAuth = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+          localStorage.removeItem('user');
+        }
+      }
+    };
+    
+    checkUserAuth();
+    
+    // Listen for storage events (if user logs in/out in another tab)
+    window.addEventListener('storage', checkUserAuth);
+    return () => window.removeEventListener('storage', checkUserAuth);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +71,27 @@ const Header = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    setUser(null);
+    
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+    
+    navigate('/');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return (
     <header 
@@ -71,14 +133,60 @@ const Header = () => {
           ))}
         </nav>
         
-        {/* Desktop CTA Buttons */}
+        {/* Desktop CTA Buttons or User Menu */}
         <div className="hidden md:flex items-center space-x-4">
-          <Button variant="outline" className="h-9 px-4">
-            Log in
-          </Button>
-          <Button className="h-9 px-4">
-            Sign up
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-9 w-9">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">My Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-600 focus:text-red-600" 
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="outline" className="h-9 px-4">
+                  Log in
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="h-9 px-4">
+                  Sign up
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
         
         {/* Mobile Menu Button */}
@@ -120,12 +228,48 @@ const Header = () => {
             ))}
           </nav>
           <div className="mt-auto space-y-4">
-            <Button variant="outline" className="w-full justify-center">
-              Log in
-            </Button>
-            <Button className="w-full justify-center">
-              Sign up
-            </Button>
+            {user ? (
+              <>
+                <div className="flex items-center space-x-3 mb-4">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      {getInitials(user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+                <Link to="/dashboard">
+                  <Button variant="outline" className="w-full justify-start">
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-red-600" 
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="outline" className="w-full justify-center">
+                    Log in
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button className="w-full justify-center">
+                    Sign up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
