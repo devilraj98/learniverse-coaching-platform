@@ -4,14 +4,28 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { GraduationCap, BookOpen, Clock, Calendar, Award, BookMarked, PlayCircle, BarChart, CheckCircle, Star, ChevronRight, Bell } from 'lucide-react';
+import { 
+  GraduationCap, 
+  BookOpen, 
+  Clock, 
+  Calendar, 
+  Award, 
+  BookMarked, 
+  PlayCircle, 
+  BarChart, 
+  CheckCircle, 
+  Star, 
+  ChevronRight, 
+  Bell, 
+  Video 
+} from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import LiveClassSection from '@/components/ui/LiveClassSection';
 
-// Mock data for demonstration
 const enrolledCourses = [
   {
     id: 'course-1',
@@ -266,6 +280,30 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
                   
+                  {/* Live Classes */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-medium">Next Live Class</h3>
+                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                          Mon/Wed/Fri
+                        </Badge>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="font-medium text-sm">CI/CD Pipeline Implementation</h4>
+                          <p className="text-xs text-muted-foreground">Monday, Nov 20 • 7:00 PM EST</p>
+                        </div>
+                        <Button size="sm" variant="default" className="w-full" asChild>
+                          <a href="https://example.com/join-class" target="_blank" rel="noopener noreferrer">
+                            <PlayCircle className="h-3 w-3 mr-1" />
+                            Join Class
+                          </a>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
                   {/* Achievements */}
                   <Card>
                     <CardContent className="p-6">
@@ -298,8 +336,9 @@ const Dashboard = () => {
               {/* Main Content */}
               <div className="lg:col-span-3">
                 <Tabs defaultValue="learning" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="learning">My Learning</TabsTrigger>
+                    <TabsTrigger value="live-classes">Live Classes</TabsTrigger>
                     <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
                     <TabsTrigger value="completed">Completed</TabsTrigger>
                     <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -451,6 +490,20 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                  
+                  {/* Live Classes Tab */}
+                  <TabsContent value="live-classes" className="pt-6">
+                    <div className={cn(
+                      "space-y-6",
+                      isLoaded ? "animate-fade-in" : "opacity-0"
+                    )}>
+                      <Card>
+                        <CardContent className="p-6">
+                          <LiveClassSection />
+                        </CardContent>
                       </Card>
                     </div>
                   </TabsContent>

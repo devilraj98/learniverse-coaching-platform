@@ -3,13 +3,17 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export interface CategoryFilterProps {
-  categories: { id: string; name: string }[];
-  selectedCategories: string[];
-  onChange: (category: string) => void;
+export interface CategoryFilterProps<T extends string> {
+  categories: { id: T; name: string }[];
+  selectedCategories: T[];
+  onChange: (category: T) => void;
 }
 
-const CategoryFilter = ({ categories, selectedCategories, onChange }: CategoryFilterProps) => {
+const CategoryFilter = <T extends string>({ 
+  categories, 
+  selectedCategories, 
+  onChange 
+}: CategoryFilterProps<T>) => {
   return (
     <div className="flex flex-wrap gap-2">
       {categories.map((category) => (
