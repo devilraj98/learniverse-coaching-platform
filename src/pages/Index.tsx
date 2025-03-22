@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, GraduationCap, Users, BarChart, Award, Clock, CheckCircle } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -323,7 +324,11 @@ const Index = () => {
               )}
             >
               {popularCourses.map((course) => (
-                <CourseCard key={course.id} {...course} />
+                <CourseCard 
+                  key={course.id} 
+                  {...course} 
+                  level={course.level as "Beginner" | "Intermediate" | "Advanced" | "All Levels"}
+                />
               ))}
             </div>
             

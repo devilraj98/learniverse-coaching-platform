@@ -1,16 +1,63 @@
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CourseCard from '@/components/ui/CourseCard';
-import CategoryFilter, { Category, Level } from '@/components/ui/CategoryFilter';
-import { cn } from '@/lib/utils';
-import { ArrowUpDown, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CategoryFilter from '@/components/ui/CategoryFilter';
 
-// Mock data for demonstration
+// Mock Data
+const categories = [
+  { name: 'All Categories', count: 1296 },
+  { name: 'Business', count: 486 },
+  { name: 'Programming', count: 352 },
+  { name: 'Marketing', count: 275 },
+  { name: 'Design', count: 183 },
+  { name: 'Personal Development', count: 142 },
+  { name: 'Photography', count: 128 },
+  { name: 'Music', count: 95 },
+  { name: 'Health & Fitness', count: 87 },
+  { name: 'Language Learning', count: 76 },
+  { name: 'Finance', count: 68 },
+  { name: 'Teaching & Academics', count: 57 },
+];
+
+const levels = [
+  { value: 'all', label: 'All Levels' },
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+];
+
+const durations = [
+  { value: 'all', label: 'Any Duration' },
+  { value: 'short', label: '0-3 Hours' },
+  { value: 'medium', label: '3-10 Hours' },
+  { value: 'long', label: '10+ Hours' },
+];
+
+const prices = [
+  { value: 'all', label: 'Any Price' },
+  { value: 'free', label: 'Free' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'low', label: 'Under $50' },
+  { value: 'high', label: '$50+' },
+];
+
+const sortOptions = [
+  { value: 'popular', label: 'Most Popular' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'top-rated', label: 'Top Rated' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+];
+
+// Mock course data
 const allCourses = [
   {
     id: 'course-1',
@@ -25,9 +72,9 @@ const allCourses = [
     rating: 4.8,
     reviewCount: 1247,
     category: 'Marketing',
-    level: 'All Levels',
+    level: 'Intermediate',
     duration: '30 hours',
-    studentsCount: 18650,
+    studentsCount: 42890,
   },
   {
     id: 'course-2',
@@ -41,7 +88,7 @@ const allCourses = [
     originalPrice: 99.99,
     rating: 4.7,
     reviewCount: 823,
-    category: 'Business',
+    category: 'Finance',
     level: 'Intermediate',
     duration: '22 hours',
     studentsCount: 12450,
@@ -74,227 +121,238 @@ const allCourses = [
     originalPrice: 79.99,
     rating: 4.6,
     reviewCount: 947,
-    category: 'Communication',
+    category: 'Personal Development',
     level: 'All Levels',
     duration: '16 hours',
     studentsCount: 22340,
   },
   {
     id: 'course-5',
-    title: 'UX/UI Design Fundamentals',
+    title: 'UI/UX Design Principles',
     instructor: {
-      name: 'Alex Rivera',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80',
+      name: 'Jessica Lee',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80',
     },
-    coverImage: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2064&q=80',
-    price: 74.99,
-    originalPrice: 94.99,
+    coverImage: 'https://images.unsplash.com/photo-1540851696419-de7ce1a3dbda?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1769&q=80',
+    price: 69.99,
+    originalPrice: 99.99,
     rating: 4.8,
-    reviewCount: 762,
+    reviewCount: 1189,
     category: 'Design',
     level: 'Beginner',
     duration: '20 hours',
-    studentsCount: 9840,
+    studentsCount: 31240,
   },
   {
     id: 'course-6',
-    title: 'Mindfulness and Stress Management',
-    instructor: {
-      name: 'Jennifer Lee',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    },
-    coverImage: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    price: 49.99,
-    rating: 4.9,
-    reviewCount: 1354,
-    category: 'Personal Development',
-    level: 'All Levels',
-    duration: '15 hours',
-    studentsCount: 28750,
-  },
-  {
-    id: 'course-7',
-    title: 'React.js for Front-End Developers',
+    title: 'Introduction to Machine Learning',
     instructor: {
       name: 'David Kim',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80',
     },
-    coverImage: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    price: 84.99,
+    coverImage: 'https://images.unsplash.com/photo-1591696331111-ef9586a5b17a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80',
+    price: 89.99,
     originalPrice: 119.99,
-    rating: 4.8,
-    reviewCount: 987,
+    rating: 4.7,
+    reviewCount: 978,
     category: 'Programming',
     level: 'Intermediate',
-    duration: '26 hours',
-    studentsCount: 14530,
+    duration: '32 hours',
+    studentsCount: 19850,
+  },
+  {
+    id: 'course-7',
+    title: 'Photography Masterclass',
+    instructor: {
+      name: 'Robert Chen',
+      avatar: 'https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1764&q=80',
+    price: 74.99,
+    originalPrice: 94.99,
+    rating: 4.9,
+    reviewCount: 1432,
+    category: 'Photography',
+    level: 'All Levels',
+    duration: '25 hours',
+    studentsCount: 38720,
   },
   {
     id: 'course-8',
-    title: 'Social Media Strategy for Businesses',
+    title: 'Guitar for Beginners',
     instructor: {
-      name: 'Sarah Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80',
+      name: 'James Wilson',
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80',
     },
-    coverImage: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80',
-    price: 69.99,
-    rating: 4.7,
-    reviewCount: 756,
-    category: 'Marketing',
-    level: 'Intermediate',
+    coverImage: 'https://images.unsplash.com/photo-1471478331149-c72f17e33c73?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1769&q=80',
+    price: 49.99,
+    originalPrice: 69.99,
+    rating: 4.6,
+    reviewCount: 892,
+    category: 'Music',
+    level: 'Beginner',
     duration: '18 hours',
-    studentsCount: 11250,
+    studentsCount: 28930,
   },
   {
     id: 'course-9',
-    title: 'Leadership Skills for Managers',
+    title: 'Complete Web Development Bootcamp',
     instructor: {
-      name: 'Michael Chen',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+      name: 'David Kim',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=774&q=80',
     },
-    coverImage: 'https://images.unsplash.com/photo-1559523161-0fc0d8b38a77?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80',
-    price: 79.99,
-    originalPrice: 99.99,
+    coverImage: 'https://images.unsplash.com/photo-1565106430482-8f6e74349ca1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1770&q=80',
+    price: 99.99,
+    originalPrice: 199.99,
     rating: 4.8,
-    reviewCount: 1089,
-    category: 'Business',
-    level: 'Advanced',
-    duration: '24 hours',
-    studentsCount: 16780,
+    reviewCount: 3254,
+    category: 'Programming',
+    level: 'All Levels',
+    duration: '65 hours',
+    studentsCount: 125740,
   },
 ];
 
-const categories: Category[] = [
-  { id: 'business', name: 'Business', count: 128 },
-  { id: 'marketing', name: 'Marketing', count: 95 },
-  { id: 'programming', name: 'Programming', count: 186 },
-  { id: 'design', name: 'Design', count: 64 },
-  { id: 'communication', name: 'Communication', count: 47 },
-  { id: 'personal-development', name: 'Personal Development', count: 72 },
-];
-
-type SortOption = 'most-popular' | 'highest-rated' | 'newest' | 'price-low-high' | 'price-high-low';
-
 const Courses = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [isLoaded, setIsLoaded] = useState(false);
-  
-  // State
-  const [filteredCourses, setFilteredCourses] = useState(allCourses);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState('All Categories');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevels, setSelectedLevels] = useState<Level[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 200]);
-  const [sortOption, setSortOption] = useState<SortOption>('most-popular');
+  const [levelFilter, setLevelFilter] = useState('all');
+  const [durationFilter, setDurationFilter] = useState('all');
+  const [priceFilter, setPriceFilter] = useState('all');
+  const [sortOption, setSortOption] = useState('popular');
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [filteredCourses, setFilteredCourses] = useState(allCourses);
+  const [activeFilters, setActiveFilters] = useState<{type: string, value: string}[]>([]);
   
+  // Apply filters whenever any filter criteria changes
   useEffect(() => {
-    // Get any initial filter values from URL
-    const categoryParam = searchParams.get('category');
-    if (categoryParam) {
-      const category = categories.find(c => c.name.toLowerCase() === categoryParam.toLowerCase());
-      if (category) {
-        setSelectedCategories([category.id]);
-      }
-    }
-    
-    const searchParam = searchParams.get('q');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-    
-    setIsLoaded(true);
-  }, [searchParams]);
-  
-  // Apply filters and sorting
-  useEffect(() => {
-    let filtered = [...allCourses];
+    let result = [...allCourses];
     
     // Apply category filter
-    if (selectedCategories.length > 0) {
-      filtered = filtered.filter(course => 
-        selectedCategories.some(categoryId => {
-          const category = categories.find(c => c.id === categoryId);
-          return category && course.category === category.name;
-        })
-      );
+    if (activeCategory !== 'All Categories') {
+      result = result.filter(course => course.category === activeCategory);
     }
     
     // Apply search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(course =>
-        course.title.toLowerCase().includes(query) ||
-        course.instructor.name.toLowerCase().includes(query) ||
-        course.category.toLowerCase().includes(query)
+      result = result.filter(course => 
+        course.title.toLowerCase().includes(query) || 
+        course.category.toLowerCase().includes(query) ||
+        course.instructor.name.toLowerCase().includes(query)
       );
     }
     
     // Apply level filter
-    if (selectedLevels.length > 0) {
-      filtered = filtered.filter(course => 
-        selectedLevels.includes(course.level as Level)
-      );
+    if (levelFilter !== 'all') {
+      const levelMap: Record<string, string> = {
+        'beginner': 'Beginner',
+        'intermediate': 'Intermediate',
+        'advanced': 'Advanced',
+        'all-levels': 'All Levels'
+      };
+      result = result.filter(course => course.level === levelMap[levelFilter]);
     }
     
-    // Apply price range filter
-    filtered = filtered.filter(course => 
-      course.price >= priceRange[0] && course.price <= priceRange[1]
-    );
+    // Apply duration filter
+    if (durationFilter !== 'all') {
+      const getDurationHours = (duration: string): number => {
+        const match = duration.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+      
+      const hours = result.map(course => getDurationHours(course.duration));
+      
+      if (durationFilter === 'short') {
+        result = result.filter((_, i) => hours[i] <= 3);
+      } else if (durationFilter === 'medium') {
+        result = result.filter((_, i) => hours[i] > 3 && hours[i] <= 10);
+      } else if (durationFilter === 'long') {
+        result = result.filter((_, i) => hours[i] > 10);
+      }
+    }
+    
+    // Apply price filter
+    if (priceFilter !== 'all') {
+      if (priceFilter === 'free') {
+        result = result.filter(course => course.price === 0);
+      } else if (priceFilter === 'paid') {
+        result = result.filter(course => course.price > 0);
+      } else if (priceFilter === 'low') {
+        result = result.filter(course => course.price > 0 && course.price < 50);
+      } else if (priceFilter === 'high') {
+        result = result.filter(course => course.price >= 50);
+      }
+    }
     
     // Apply sorting
-    switch (sortOption) {
-      case 'most-popular':
-        filtered.sort((a, b) => b.studentsCount - a.studentsCount);
-        break;
-      case 'highest-rated':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        // In real app, would use a date field
-        filtered.sort((a, b) => parseInt(b.id.split('-')[1]) - parseInt(a.id.split('-')[1]));
-        break;
-      case 'price-low-high':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high-low':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
+    if (sortOption === 'newest') {
+      // In a real app, courses would have a creation date
+      // For this mock, we'll just reverse the array to simulate "newest"
+      result = [...result].reverse();
+    } else if (sortOption === 'top-rated') {
+      result = [...result].sort((a, b) => b.rating - a.rating);
+    } else if (sortOption === 'price-low') {
+      result = [...result].sort((a, b) => a.price - b.price);
+    } else if (sortOption === 'price-high') {
+      result = [...result].sort((a, b) => b.price - a.price);
+    } else {
+      // 'popular' is default
+      result = [...result].sort((a, b) => b.studentsCount - a.studentsCount);
     }
     
-    setFilteredCourses(filtered);
+    setFilteredCourses(result);
     
-    // Update URL parameters
-    const params = new URLSearchParams();
-    if (selectedCategories.length > 0) {
-      const categoryNames = selectedCategories.map(id => {
-        const category = categories.find(c => c.id === id);
-        return category ? category.name.toLowerCase() : '';
-      }).filter(Boolean);
-      
-      params.set('category', categoryNames.join(','));
+    // Update active filters for display
+    const newActiveFilters: {type: string, value: string}[] = [];
+    
+    if (activeCategory !== 'All Categories') {
+      newActiveFilters.push({ type: 'category', value: activeCategory });
     }
     
-    if (searchQuery) {
-      params.set('q', searchQuery);
+    if (levelFilter !== 'all') {
+      const levelLabel = levels.find(l => l.value === levelFilter)?.label || '';
+      if (levelLabel) {
+        newActiveFilters.push({ type: 'level', value: levelLabel });
+      }
     }
     
-    setSearchParams(params, { replace: true });
-  }, [selectedCategories, searchQuery, selectedLevels, priceRange, sortOption, setSearchParams]);
+    if (durationFilter !== 'all') {
+      const durationLabel = durations.find(d => d.value === durationFilter)?.label || '';
+      if (durationLabel) {
+        newActiveFilters.push({ type: 'duration', value: durationLabel });
+      }
+    }
+    
+    if (priceFilter !== 'all') {
+      const priceLabel = prices.find(p => p.value === priceFilter)?.label || '';
+      if (priceLabel) {
+        newActiveFilters.push({ type: 'price', value: priceLabel });
+      }
+    }
+    
+    setActiveFilters(newActiveFilters);
+    
+  }, [activeCategory, searchQuery, levelFilter, durationFilter, priceFilter, sortOption]);
   
-  const handleCategoryChange = (categoryIds: string[]) => {
-    setSelectedCategories(categoryIds);
+  const handleRemoveFilter = (filterToRemove: {type: string, value: string}) => {
+    if (filterToRemove.type === 'category') {
+      setActiveCategory('All Categories');
+    } else if (filterToRemove.type === 'level') {
+      setLevelFilter('all');
+    } else if (filterToRemove.type === 'duration') {
+      setDurationFilter('all');
+    } else if (filterToRemove.type === 'price') {
+      setPriceFilter('all');
+    }
   };
   
-  const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-  };
-  
-  const handleLevelChange = (levels: Level[]) => {
-    setSelectedLevels(levels);
-  };
-  
-  const handlePriceRangeChange = (range: [number, number]) => {
-    setPriceRange(range);
+  const clearAllFilters = () => {
+    setActiveCategory('All Categories');
+    setLevelFilter('all');
+    setDurationFilter('all');
+    setPriceFilter('all');
+    setSearchQuery('');
   };
   
   return (
@@ -302,127 +360,274 @@ const Courses = () => {
       <Header />
       
       <main className="flex-grow pt-20">
-        {/* Header section */}
-        <section 
-          className={cn(
-            "bg-muted/30 py-10 md:py-16",
-            isLoaded ? "animate-fade-in" : "opacity-0"
-          )}
-        >
+        {/* Page Header */}
+        <section className="bg-muted/30 py-10 md:py-14">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="max-w-3xl">
-              <h1 className="text-3xl md:text-4xl font-bold">Explore Our Courses</h1>
-              <p className="text-muted-foreground text-lg mt-2">
-                Browse our collection of premium courses taught by industry experts
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">Browse Our Courses</h1>
+              <p className="text-lg text-muted-foreground">
+                Discover top-quality courses taught by industry experts and take your skills to the next level
               </p>
+              
+              <div className="mt-8 max-w-2xl mx-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                  <Input 
+                    type="search"
+                    placeholder="Search courses, categories, or instructors..." 
+                    className="pl-10 py-6 text-base border-input"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>
         
-        {/* Main content section */}
-        <section className="py-10">
+        {/* Course Catalog */}
+        <section className="py-12">
           <div className="max-w-7xl mx-auto px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              {/* Sidebar with filters */}
-              <div 
-                className={cn(
-                  "lg:col-span-1",
-                  isLoaded ? "animate-fade-in" : "opacity-0"
-                )}
-              >
-                <CategoryFilter
-                  categories={categories}
-                  onCategoryChange={handleCategoryChange}
-                  onSearchChange={handleSearchChange}
-                  onLevelChange={handleLevelChange}
-                  onPriceRangeChange={handlePriceRangeChange}
-                  className="sticky top-24"
-                />
-              </div>
-              
-              {/* Course listings */}
-              <div className="lg:col-span-3">
-                {/* Sorting and results count */}
-                <div 
-                  className={cn(
-                    "flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4",
-                    isLoaded ? "animate-fade-in animation-delay-100" : "opacity-0"
-                  )}
-                >
-                  <div className="text-muted-foreground">
-                    <p>Showing <span className="font-medium text-foreground">{filteredCourses.length}</span> results</p>
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <span className="text-sm mr-2">Sort by:</span>
-                    <Select
-                      value={sortOption}
-                      onValueChange={(value: SortOption) => setSortOption(value)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="most-popular">Most Popular</SelectItem>
-                        <SelectItem value="highest-rated">Highest Rated</SelectItem>
-                        <SelectItem value="newest">Newest</SelectItem>
-                        <SelectItem value="price-low-high">Price: Low to High</SelectItem>
-                        <SelectItem value="price-high-low">Price: High to Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="ml-2"
-                      onClick={() => setSortOption(sortOption === 'price-low-high' ? 'price-high-low' : 'price-low-high')}
-                    >
-                      <ArrowUpDown className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* Sidebar Filters (Desktop) */}
+              <aside className="hidden md:block w-64 space-y-8">
+                <div>
+                  <h3 className="font-medium text-lg mb-3">Categories</h3>
+                  <CategoryFilter 
+                    categories={categories}
+                    activeCategory={activeCategory}
+                    onSelectCategory={setActiveCategory}
+                  />
                 </div>
                 
-                {/* Course grid */}
-                {filteredCourses.length > 0 ? (
-                  <div 
-                    className={cn(
-                      "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6",
-                      isLoaded ? "animate-fade-in animation-delay-200" : "opacity-0"
-                    )}
-                  >
-                    {filteredCourses.map((course) => (
-                      <CourseCard key={course.id} {...course} />
-                    ))}
+                <div>
+                  <h3 className="font-medium text-lg mb-3">Filter by</h3>
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Level</label>
+                      <Select value={levelFilter} onValueChange={setLevelFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {levels.map(level => (
+                            <SelectItem key={level.value} value={level.value}>
+                              {level.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Duration</label>
+                      <Select value={durationFilter} onValueChange={setDurationFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {durations.map(duration => (
+                            <SelectItem key={duration.value} value={duration.value}>
+                              {duration.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <label className="text-sm font-medium">Price</label>
+                      <Select value={priceFilter} onValueChange={setPriceFilter}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select price" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {prices.map(price => (
+                            <SelectItem key={price.value} value={price.value}>
+                              {price.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                ) : (
-                  <div 
-                    className={cn(
-                      "text-center py-16 bg-muted/30 rounded-lg",
-                      isLoaded ? "animate-fade-in animation-delay-200" : "opacity-0"
-                    )}
-                  >
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="bg-primary/10 p-3 rounded-full">
-                        <CheckCircle2 className="h-8 w-8 text-primary" />
-                      </div>
-                      <h3 className="text-xl font-medium">No courses found</h3>
-                      <p className="text-muted-foreground max-w-md mx-auto">
-                        We couldn't find any courses matching your search criteria. Try adjusting your filters or search terms.
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => {
-                          setSelectedCategories([]);
-                          setSearchQuery('');
-                          setSelectedLevels([]);
-                          setPriceRange([0, 200]);
-                          setSortOption('most-popular');
+                </div>
+              </aside>
+              
+              {/* Mobile Filters Button */}
+              <div className="md:hidden mb-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => setIsMobileFilterOpen(true)}
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  Filter Courses
+                </Button>
+              </div>
+              
+              {/* Mobile Filters Drawer */}
+              {isMobileFilterOpen && (
+                <div className="fixed inset-0 bg-background z-50 overflow-y-auto p-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold">Filters</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => setIsMobileFilterOpen(false)}
+                    >
+                      <X className="h-6 w-6" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-8">
+                    <div>
+                      <h3 className="font-medium mb-3">Categories</h3>
+                      <CategoryFilter 
+                        categories={categories}
+                        activeCategory={activeCategory}
+                        onSelectCategory={(category) => {
+                          setActiveCategory(category);
+                          setIsMobileFilterOpen(false);
                         }}
+                      />
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Level</label>
+                        <Select value={levelFilter} onValueChange={setLevelFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {levels.map(level => (
+                              <SelectItem key={level.value} value={level.value}>
+                                {level.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Duration</label>
+                        <Select value={durationFilter} onValueChange={setDurationFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {durations.map(duration => (
+                              <SelectItem key={duration.value} value={duration.value}>
+                                {duration.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="text-sm font-medium">Price</label>
+                        <Select value={priceFilter} onValueChange={setPriceFilter}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select price" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {prices.map(price => (
+                              <SelectItem key={price.value} value={price.value}>
+                                {price.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <Button 
+                        className="w-full"
+                        onClick={() => setIsMobileFilterOpen(false)}
                       >
-                        Clear all filters
+                        Apply Filters
                       </Button>
                     </div>
                   </div>
+                </div>
+              )}
+              
+              {/* Main Content */}
+              <div className="flex-1">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <p className="text-muted-foreground">Showing {filteredCourses.length} results</p>
+                  </div>
+                  
+                  <div className="flex items-center w-full sm:w-auto">
+                    <Select value={sortOption} onValueChange={setSortOption}>
+                      <SelectTrigger className="w-full sm:w-[200px]">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sortOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Active Filters */}
+                {activeFilters.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="text-sm text-muted-foreground">Active filters:</span>
+                      {activeFilters.map((filter, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center bg-muted px-3 py-1 rounded-full text-sm"
+                        >
+                          <span>{filter.value}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-5 w-5 ml-1 p-0"
+                            onClick={() => handleRemoveFilter(filter)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      
+                      <Button 
+                        variant="ghost" 
+                        className="text-sm h-7 ml-2"
+                        onClick={clearAllFilters}
+                      >
+                        Clear all
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Course Grid */}
+                {filteredCourses.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredCourses.map((course) => (
+                      <CourseCard 
+                        key={course.id} 
+                        {...course} 
+                        level={course.level as "Beginner" | "Intermediate" | "Advanced" | "All Levels"} 
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="p-8 text-center">
+                    <h3 className="text-xl font-medium mb-2">No courses found</h3>
+                    <p className="text-muted-foreground mb-6">Try adjusting your filters or search terms</p>
+                    <Button onClick={clearAllFilters}>Clear Filters</Button>
+                  </Card>
                 )}
               </div>
             </div>
