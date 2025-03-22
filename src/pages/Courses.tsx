@@ -1,519 +1,633 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X } from 'lucide-react';
 import CourseCard from '@/components/ui/CourseCard';
 import CategoryFilter from '@/components/ui/CategoryFilter';
-import { cn } from '@/lib/utils';
+import { 
+  Button, 
+  Input, 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue,
+  Checkbox
+} from '@/components/ui';
+import { 
+  Search, 
+  Filter, 
+  ChevronDown, 
+  SlidersHorizontal,
+  BookOpen,
+} from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
-// Define the course type
-interface Course {
-  id: string;
-  title: string;
-  instructor: string;
-  level: "Beginner" | "Intermediate" | "Advanced";
-  category: string;
-  price: number;
-  rating: number;
-  imageUrl: string;
-  studentCount: number;
-  duration: string;
-}
+const categories = [
+  { id: 'aws-core', name: 'AWS Core Services' },
+  { id: 'devops', name: 'DevOps Practices' },
+  { id: 'ci-cd', name: 'CI/CD Pipelines' },
+  { id: 'containers', name: 'Containers & Kubernetes' },
+  { id: 'iac', name: 'Infrastructure as Code' },
+  { id: 'monitoring', name: 'Monitoring & Logging' },
+  { id: 'security', name: 'Security & Compliance' },
+  { id: 'automation', name: 'Automation' },
+];
 
-// Define the category type
-interface Category {
-  id: string;
-  name: string;
-  count: number;
-}
-
-// Mock data for courses
-const mockCourses: Course[] = [
+const coursesData = [
   {
-    id: "1",
-    title: "Complete Web Development Bootcamp",
-    instructor: "Dr. Angela Yu",
-    level: "Beginner",
-    category: "Web Development",
-    price: 89.99,
+    id: 'aws-devops-pro',
+    title: 'AWS Certified DevOps Engineer Professional',
+    instructor: {
+      name: 'Sarah Johnson',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1667372393119-3d9503fd520a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    price: 149.99,
+    originalPrice: 199.99,
     rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 12543,
-    duration: "45 hours"
+    reviewCount: 342,
+    category: 'devops',
+    level: 'Advanced',
+    duration: '45 hours',
+    studentsCount: 5840,
+    featured: true
   },
   {
-    id: "2",
-    title: "Advanced JavaScript Concepts",
-    instructor: "Andrei Neagoie",
-    level: "Intermediate",
-    category: "JavaScript",
-    price: 69.99,
-    rating: 4.7,
-    imageUrl: "https://images.unsplash.com/photo-1552308995-2baac1ad5490?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 8721,
-    duration: "29 hours"
-  },
-  {
-    id: "3",
-    title: "Machine Learning A-Z: Hands-On Python",
-    instructor: "Kirill Eremenko",
-    level: "Intermediate",
-    category: "Data Science",
-    price: 79.99,
-    rating: 4.9,
-    imageUrl: "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 10982,
-    duration: "38 hours"
-  },
-  {
-    id: "4",
-    title: "The Complete Digital Marketing Course",
-    instructor: "Rob Percival",
-    level: "Beginner",
-    category: "Marketing",
-    price: 59.99,
+    id: 'aws-ci-cd',
+    title: 'CI/CD Pipeline Implementation with AWS',
+    instructor: {
+      name: 'Michael Chen',
+      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    price: 89.99,
+    originalPrice: 129.99,
     rating: 4.6,
-    imageUrl: "https://images.unsplash.com/photo-1553835973-dec43bfddbeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 9843,
-    duration: "32 hours"
+    reviewCount: 218,
+    category: 'ci-cd',
+    level: 'Intermediate',
+    duration: '30 hours',
+    studentsCount: 3420,
+    featured: false
   },
   {
-    id: "5",
-    title: "iOS App Development with Swift",
-    instructor: "Stephen Grider",
-    level: "Advanced",
-    category: "Mobile Development",
+    id: 'aws-terraform',
+    title: 'Infrastructure as Code with Terraform on AWS',
+    instructor: {
+      name: 'Jennifer Lee',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1523961131990-5ea7c61b2107?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+    price: 79.99,
+    originalPrice: 99.99,
+    rating: 4.7,
+    reviewCount: 156,
+    category: 'iac',
+    level: 'Intermediate',
+    duration: '28 hours',
+    studentsCount: 2750,
+    featured: false
+  },
+  {
+    id: 'aws-containers',
+    title: 'AWS Container Services: ECS and EKS Masterclass',
+    instructor: {
+      name: 'David Kim',
+      avatar: 'https://images.unsplash.com/photo-1600486913747-55e5470d6f40?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1605745341289-55ac289bf12c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80',
     price: 99.99,
-    rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1534802046520-4f27db7f3ae5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 6532,
-    duration: "42 hours"
+    originalPrice: 149.99,
+    rating: 4.5,
+    reviewCount: 187,
+    category: 'containers',
+    level: 'Intermediate',
+    duration: '35 hours',
+    studentsCount: 2100,
+    featured: false
   },
   {
-    id: "6",
-    title: "React Native - The Practical Guide",
-    instructor: "Maximilian Schwarzmüller",
-    level: "Intermediate",
-    category: "Mobile Development",
-    price: 79.99,
-    rating: 4.7,
-    imageUrl: "https://images.unsplash.com/photo-1581276879449-0571ec1dca89?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 7812,
-    duration: "37 hours"
-  },
-  {
-    id: "7",
-    title: "The Complete Node.js Developer Course",
-    instructor: "Andrew Mead",
-    level: "Intermediate",
-    category: "Web Development",
+    id: 'aws-security',
+    title: 'AWS Security Best Practices for DevOps',
+    instructor: {
+      name: 'Emily Rodriguez',
+      avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
     price: 69.99,
-    rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1571786256017-aee7a0c009b6?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 8925,
-    duration: "30 hours"
+    originalPrice: 89.99,
+    rating: 4.7,
+    reviewCount: 125,
+    category: 'security',
+    level: 'Intermediate',
+    duration: '25 hours',
+    studentsCount: 1850,
+    featured: false
   },
   {
-    id: "8",
-    title: "Python for Data Science and Machine Learning",
-    instructor: "Jose Portilla",
-    level: "Advanced",
-    category: "Data Science",
-    price: 89.99,
-    rating: 4.9,
-    imageUrl: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 11342,
-    duration: "40 hours"
-  },
-  {
-    id: "9",
-    title: "UX/UI Design Fundamentals",
-    instructor: "David Travis",
-    level: "Beginner",
-    category: "Design",
+    id: 'aws-monitoring',
+    title: 'AWS CloudWatch and Monitoring Solutions',
+    instructor: {
+      name: 'Thomas Wilson',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
     price: 59.99,
-    rating: 4.7,
-    imageUrl: "https://images.unsplash.com/photo-1586936893539-accfc184f8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 7632,
-    duration: "26 hours"
-  },
-  {
-    id: "10",
-    title: "Adobe Photoshop Masterclass",
-    instructor: "Daniel Walter Scott",
-    level: "Intermediate",
-    category: "Design",
-    price: 69.99,
+    originalPrice: 79.99,
     rating: 4.6,
-    imageUrl: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 8521,
-    duration: "35 hours"
+    reviewCount: 98,
+    category: 'monitoring',
+    level: 'Intermediate',
+    duration: '20 hours',
+    studentsCount: 1380,
+    featured: false
   },
   {
-    id: "11",
-    title: "GraphQL with React: The Complete Guide",
-    instructor: "Stephen Grider",
-    level: "Advanced",
-    category: "Web Development",
-    price: 79.99,
+    id: 'aws-automation',
+    title: 'AWS Automation with CloudFormation and CDK',
+    instructor: {
+      name: 'Alex Rivera',
+      avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1489875347897-49f64b51c1f8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    price: 84.99,
+    originalPrice: 109.99,
     rating: 4.8,
-    imageUrl: "https://images.unsplash.com/photo-1534670007418-bc7b8e50a356?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 6218,
-    duration: "32 hours"
+    reviewCount: 146,
+    category: 'automation',
+    level: 'Intermediate',
+    duration: '32 hours',
+    studentsCount: 2250,
+    featured: false
   },
   {
-    id: "12",
-    title: "Complete SQL Bootcamp",
-    instructor: "Jose Portilla",
-    level: "Beginner",
-    category: "Database",
-    price: 59.99,
-    rating: 4.7,
-    imageUrl: "https://images.unsplash.com/photo-1554306274-f23873d9a26c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-    studentCount: 9163,
-    duration: "24 hours"
+    id: 'aws-beginner',
+    title: 'AWS Fundamentals for DevOps Engineers',
+    instructor: {
+      name: 'Sarah Johnson',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=256&q=80',
+    },
+    coverImage: 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    price: 49.99,
+    originalPrice: 69.99,
+    rating: 4.9,
+    reviewCount: 312,
+    category: 'aws-core',
+    level: 'Beginner',
+    duration: '18 hours',
+    studentsCount: 7500,
+    featured: true
   }
 ];
 
-// Calculate categories with counts
-const getCategories = (): Category[] => {
-  const categoryCounts: Record<string, number> = {};
+type Course = typeof coursesData[0];
+type Category = typeof categories[0];
+
+const filters = [
+  { id: 'featured', label: 'Featured' },
+  { id: 'free', label: 'Free' },
+  { id: 'paid', label: 'Paid' },
+  { id: 'discount', label: 'Discounted' },
+];
+
+const sortOptions = [
+  { value: 'popular', label: 'Most Popular' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'rating', label: 'Highest Rated' },
+];
+
+const levelOptions = [
+  { value: 'All Levels', label: 'All Levels' },
+  { value: 'Beginner', label: 'Beginner' },
+  { value: 'Intermediate', label: 'Intermediate' },
+  { value: 'Advanced', label: 'Advanced' },
+];
+
+const Courses = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSortOption, setSelectedSortOption] = useState('popular');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [activePage, setActivePage] = useState(1);
+  const itemsPerPage = 6;
   
-  mockCourses.forEach(course => {
-    if (categoryCounts[course.category]) {
-      categoryCounts[course.category]++;
-    } else {
-      categoryCounts[course.category] = 1;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+    setActivePage(1);
+  };
+  
+  const handleFilterChange = (filterId: string) => {
+    setSelectedFilters(prev => 
+      prev.includes(filterId) 
+        ? prev.filter(id => id !== filterId)
+        : [...prev, filterId]
+    );
+    setActivePage(1);
+  };
+  
+  const toggleFilterMenu = () => {
+    setIsFilterMenuOpen(prev => !prev);
+  };
+  
+  const filteredCourses = coursesData.filter(course => {
+    if (searchQuery && !course.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    
+    if (selectedCategories.length > 0 && !selectedCategories.includes(course.category)) {
+      return false;
+    }
+    
+    if (selectedLevel && selectedLevel !== 'All Levels' && course.level !== selectedLevel) {
+      return false;
+    }
+    
+    if (selectedFilters.includes('featured') && !course.featured) {
+      return false;
+    }
+    
+    if (selectedFilters.includes('free') && course.price !== 0) {
+      return false;
+    }
+    
+    if (selectedFilters.includes('paid') && course.price === 0) {
+      return false;
+    }
+    
+    if (selectedFilters.includes('discount') && !course.originalPrice) {
+      return false;
+    }
+    
+    return true;
+  }).sort((a, b) => {
+    switch (selectedSortOption) {
+      case 'price-low':
+        return a.price - b.price;
+      case 'price-high':
+        return b.price - a.price;
+      case 'rating':
+        return b.rating - a.rating;
+      case 'newest':
+        return 0.5 - Math.random();
+      case 'popular':
+      default:
+        return b.studentsCount - a.studentsCount;
     }
   });
   
-  // Added id to fix the type error
-  return Object.entries(categoryCounts).map(([name, count], index) => ({
-    id: index.toString(),
-    name,
-    count
-  }));
-};
-
-const Courses = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 100]);
-  const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>(mockCourses);
-  const [showFilters, setShowFilters] = useState(false);
-  
-  const categories = getCategories();
-  const levels = ["Beginner", "Intermediate", "Advanced"];
-  
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-  
-  // Handle level checkbox change
-  const handleLevelChange = (level: string) => {
-    if (selectedLevels.includes(level)) {
-      setSelectedLevels(selectedLevels.filter(l => l !== level));
-    } else {
-      setSelectedLevels([...selectedLevels, level]);
-    }
-  };
-  
-  // Handle category selection
-  const handleCategoryChange = (category: string) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter(c => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
-  };
-  
-  // Clear all filters
-  const clearFilters = () => {
-    setSearchQuery("");
-    setPriceRange([0, 100]);
-    setSelectedLevels([]);
-    setSelectedCategories([]);
-  };
-  
-  // Apply filters
-  useEffect(() => {
-    let results = mockCourses;
-    
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      results = results.filter(
-        course => 
-          course.title.toLowerCase().includes(query) || 
-          course.instructor.toLowerCase().includes(query) ||
-          course.category.toLowerCase().includes(query)
-      );
-    }
-    
-    // Apply price filter
-    results = results.filter(
-      course => course.price >= priceRange[0] && course.price <= priceRange[1]
-    );
-    
-    // Apply level filter
-    if (selectedLevels.length > 0) {
-      results = results.filter(course => selectedLevels.includes(course.level));
-    }
-    
-    // Apply category filter
-    if (selectedCategories.length > 0) {
-      results = results.filter(course => selectedCategories.includes(course.category));
-    }
-    
-    setFilteredCourses(results);
-  }, [searchQuery, priceRange, selectedLevels, selectedCategories]);
+  const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
+  const indexOfLastItem = activePage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredCourses.slice(indexOfFirstItem, indexOfLastItem);
   
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
       <main className="flex-grow pt-24 md:pt-28">
-        {/* Page header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">Discover Courses</h1>
-            <p className="text-lg text-center text-gray-600 max-w-3xl mx-auto">
-              Explore our wide range of courses taught by expert instructors to help you reach your goals.
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+              AWS DevOps Courses
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+              Master cloud infrastructure and automation with our expert-led AWS DevOps certification courses
             </p>
-            
-            {/* Search bar */}
-            <div className="max-w-2xl mx-auto mt-8 relative">
-              <Input
-                type="text"
-                placeholder="Search courses, instructors, or topics..."
-                className="pl-10 pr-4 py-3 rounded-lg shadow-sm"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              
-              <div className="md:hidden mt-4 flex justify-center">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2"
-                >
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </Button>
+          </div>
+          
+          <div className="mb-10 space-y-6">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-muted-foreground" />
               </div>
+              <Input
+                type="search"
+                placeholder="Search for AWS DevOps courses..."
+                className="pl-10 py-6"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="bg-muted/40 p-4 rounded-lg">
+              <h2 className="font-medium mb-3">Browse Categories</h2>
+              <CategoryFilter 
+                categories={categories} 
+                selectedCategories={selectedCategories} 
+                onChange={handleCategoryChange} 
+              />
             </div>
           </div>
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Filters sidebar - desktop */}
-            <div className={cn(
-              "basis-1/4 shrink-0 hidden md:block",
-              showFilters && "block"
-            )}>
-              <div className="sticky top-28">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold">Filters</h2>
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-sm">
-                    Clear all
-                  </Button>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="hidden lg:block">
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-medium mb-3">Sort By</h3>
+                  <Select value={selectedSortOption} onValueChange={setSelectedSortOption}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                {/* Price range filter */}
-                <div className="mb-8">
-                  <h3 className="text-base font-medium mb-4">Price Range</h3>
-                  <Slider
-                    defaultValue={[0, 100]}
-                    max={100}
-                    step={5}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="mb-2"
-                  />
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
-                  </div>
+                <div>
+                  <h3 className="font-medium mb-3">Level</h3>
+                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Filter by level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {levelOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                {/* Level filter */}
-                <div className="mb-8">
-                  <h3 className="text-base font-medium mb-4">Level</h3>
-                  <div className="space-y-3">
-                    {levels.map(level => (
-                      <div key={level} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`level-${level}`} 
-                          checked={selectedLevels.includes(level)}
-                          onCheckedChange={() => handleLevelChange(level)}
+                <div>
+                  <h3 className="font-medium mb-3">Filters</h3>
+                  <div className="space-y-2">
+                    {filters.map((filter) => (
+                      <div key={filter.id} className="flex items-center">
+                        <Checkbox
+                          id={`filter-${filter.id}`}
+                          checked={selectedFilters.includes(filter.id)}
+                          onCheckedChange={() => handleFilterChange(filter.id)}
                         />
-                        <label 
-                          htmlFor={`level-${level}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        <label
+                          htmlFor={`filter-${filter.id}`}
+                          className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          {level}
+                          {filter.label}
                         </label>
                       </div>
                     ))}
                   </div>
                 </div>
                 
-                {/* Category filter */}
-                <div>
-                  <h3 className="text-base font-medium mb-4">Categories</h3>
-                  <CategoryFilter
-                    categories={categories}
-                    selectedCategories={selectedCategories}
-                    onChange={handleCategoryChange}
-                  />
+                <div className="pt-4">
+                  <Button variant="outline" className="w-full" onClick={() => {
+                    setSelectedCategories([]);
+                    setSelectedFilters([]);
+                    setSelectedLevel('');
+                    setSelectedSortOption('popular');
+                    setSearchQuery('');
+                  }}>
+                    Reset Filters
+                  </Button>
                 </div>
               </div>
             </div>
             
-            {/* Mobile filters (modal-like) */}
-            {showFilters && (
-              <div className="md:hidden fixed inset-0 bg-white z-40 p-4 overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Filters</h2>
-                  <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)}>
-                    <X className="h-5 w-5" />
-                  </Button>
+            <div className="lg:hidden mb-4">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-between"
+                onClick={toggleFilterMenu}
+              >
+                <div className="flex items-center">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  <span>Filters & Sorting</span>
                 </div>
-                
-                {/* Mobile filters content */}
-                <div className="mb-8">
-                  <h3 className="text-base font-medium mb-4">Price Range</h3>
-                  <Slider
-                    defaultValue={[0, 100]}
-                    max={100}
-                    step={5}
-                    value={priceRange}
-                    onValueChange={setPriceRange}
-                    className="mb-2"
-                  />
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
+                <ChevronDown 
+                  className={cn(
+                    "h-4 w-4 transition-transform",
+                    isFilterMenuOpen && "transform rotate-180"
+                  )} 
+                />
+              </Button>
+              
+              {isFilterMenuOpen && (
+                <div className="mt-4 p-4 border rounded-lg space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-3">Browse Categories</h3>
+                    <CategoryFilter 
+                      categories={categories} 
+                      selectedCategories={selectedCategories} 
+                      onChange={handleCategoryChange} 
+                    />
                   </div>
-                </div>
-                
-                <div className="mb-8">
-                  <h3 className="text-base font-medium mb-4">Level</h3>
-                  <div className="space-y-3">
-                    {levels.map(level => (
-                      <div key={level} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`mobile-level-${level}`} 
-                          checked={selectedLevels.includes(level)}
-                          onCheckedChange={() => handleLevelChange(level)}
-                        />
-                        <label 
-                          htmlFor={`mobile-level-${level}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {level}
-                        </label>
-                      </div>
-                    ))}
+                  
+                  <div>
+                    <h3 className="font-medium mb-3">Sort By</h3>
+                    <Select value={selectedSortOption} onValueChange={setSelectedSortOption}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sortOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </div>
-                
-                <div className="mb-8">
-                  <h3 className="text-base font-medium mb-4">Categories</h3>
-                  <CategoryFilter
-                    categories={categories}
-                    selectedCategories={selectedCategories}
-                    onChange={handleCategoryChange}
-                  />
-                </div>
-                
-                <div className="flex gap-3 mt-8">
-                  <Button variant="outline" onClick={clearFilters} className="flex-1">
-                    Clear all
+                  
+                  <div>
+                    <h3 className="font-medium mb-3">Level</h3>
+                    <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Filter by level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {levelOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-3">Filters</h3>
+                    <div className="space-y-2">
+                      {filters.map((filter) => (
+                        <div key={filter.id} className="flex items-center">
+                          <Checkbox
+                            id={`mobile-filter-${filter.id}`}
+                            checked={selectedFilters.includes(filter.id)}
+                            onCheckedChange={() => handleFilterChange(filter.id)}
+                          />
+                          <label
+                            htmlFor={`mobile-filter-${filter.id}`}
+                            className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {filter.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <Button variant="outline" className="w-full" onClick={() => {
+                    setSelectedCategories([]);
+                    setSelectedFilters([]);
+                    setSelectedLevel('');
+                    setSelectedSortOption('popular');
+                    setSearchQuery('');
+                  }}>
+                    Reset Filters
                   </Button>
-                  <Button onClick={() => setShowFilters(false)} className="flex-1">
-                    Apply filters
-                  </Button>
+                </div>
+              )}
+            </div>
+            
+            <div className="lg:col-span-3">
+              <div className="flex items-center justify-between mb-6">
+                <div className="text-sm text-muted-foreground">
+                  Showing <span className="font-medium">{currentItems.length}</span> of{" "}
+                  <span className="font-medium">{filteredCourses.length}</span> courses
                 </div>
               </div>
-            )}
-            
-            {/* Course listing */}
-            <div className="flex-1">
-              {/* Active filters */}
-              {(selectedLevels.length > 0 || selectedCategories.length > 0 || 
-                priceRange[0] > 0 || priceRange[1] < 100) && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2">Active filters:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedLevels.map(level => (
-                      <Badge key={level} variant="secondary" className="flex items-center gap-1">
-                        {level}
-                        <X 
-                          className="h-3 w-3 cursor-pointer" 
-                          onClick={() => handleLevelChange(level)} 
-                        />
-                      </Badge>
+              
+              {isLoaded ? (
+                currentItems.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {currentItems.map((course) => (
+                      <CourseCard
+                        key={course.id}
+                        id={course.id}
+                        title={course.title}
+                        instructor={course.instructor}
+                        coverImage={course.coverImage}
+                        price={course.price}
+                        originalPrice={course.originalPrice}
+                        rating={course.rating}
+                        reviewCount={course.reviewCount}
+                        category={course.category}
+                        level={course.level}
+                        duration={course.duration}
+                        studentsCount={course.studentsCount}
+                        featured={course.featured}
+                      />
                     ))}
-                    
-                    {selectedCategories.map(category => (
-                      <Badge key={category} variant="secondary" className="flex items-center gap-1">
-                        {category}
-                        <X 
-                          className="h-3 w-3 cursor-pointer" 
-                          onClick={() => handleCategoryChange(category)} 
-                        />
-                      </Badge>
-                    ))}
-                    
-                    {(priceRange[0] > 0 || priceRange[1] < 100) && (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        ${priceRange[0]} - ${priceRange[1]}
-                        <X 
-                          className="h-3 w-3 cursor-pointer" 
-                          onClick={() => setPriceRange([0, 100])} 
-                        />
-                      </Badge>
-                    )}
                   </div>
+                ) : (
+                  <div className="text-center py-12 bg-muted/30 rounded-lg">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-medium">No courses found</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Try adjusting your search or filter criteria
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => {
+                        setSelectedCategories([]);
+                        setSelectedFilters([]);
+                        setSelectedLevel('');
+                        setSelectedSortOption('popular');
+                        setSearchQuery('');
+                      }}
+                    >
+                      Reset all filters
+                    </Button>
+                  </div>
+                )
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {Array(6).fill(null).map((_, i) => (
+                    <div key={i} className="bg-muted rounded-lg overflow-hidden">
+                      <div className="aspect-video bg-muted-foreground/10 animate-pulse" />
+                      <div className="p-5 space-y-4">
+                        <div className="h-5 bg-muted-foreground/10 animate-pulse rounded w-3/4" />
+                        <div className="h-4 bg-muted-foreground/10 animate-pulse rounded w-1/2" />
+                        <div className="pt-4 flex justify-between">
+                          <div className="h-6 bg-muted-foreground/10 animate-pulse rounded w-1/4" />
+                          <div className="h-6 bg-muted-foreground/10 animate-pulse rounded w-1/4" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {/* Results count */}
-              <p className="text-gray-600 mb-6">
-                Showing {filteredCourses.length} results
-              </p>
-              
-              {/* Course grid */}
-              {filteredCourses.length === 0 ? (
-                <div className="text-center py-12">
-                  <h3 className="text-xl font-medium mb-4">No courses found</h3>
-                  <p className="text-gray-600 mb-6">
-                    Try adjusting your filters or search query
-                  </p>
-                  <Button onClick={clearFilters}>
-                    Clear all filters
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredCourses.map(course => (
-                    <Link key={course.id} to={`/courses/${course.id}`}>
-                      <CourseCard course={course} />
-                    </Link>
-                  ))}
-                </div>
+              {totalPages > 1 && (
+                <Pagination className="mt-8">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setActivePage(prev => Math.max(prev - 1, 1))}
+                        className={activePage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: totalPages }).map((_, index) => {
+                      const pageNumber = index + 1;
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === totalPages ||
+                        (pageNumber >= activePage - 1 && pageNumber <= activePage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={pageNumber}>
+                            <PaginationLink
+                              isActive={activePage === pageNumber}
+                              onClick={() => setActivePage(pageNumber)}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      }
+                      
+                      if (
+                        (pageNumber === 2 && activePage > 3) ||
+                        (pageNumber === totalPages - 1 && activePage < totalPages - 2)
+                      ) {
+                        return <PaginationItem key={pageNumber}><PaginationEllipsis /></PaginationItem>;
+                      }
+                      
+                      return null;
+                    })}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setActivePage(prev => Math.min(prev + 1, totalPages))}
+                        className={activePage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               )}
             </div>
           </div>

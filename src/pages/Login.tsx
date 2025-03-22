@@ -1,28 +1,23 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useToast } from "@/hooks/use-toast";
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import { Link, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
+  rememberMe: z.boolean().default(false),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -35,129 +30,150 @@ const Login = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
+      rememberMe: false,
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    // Here we would normally call an API to authenticate the user
-    console.log("Login data:", data);
+  const onSubmit = (values: FormValues) => {
+    console.log(values);
     
-    // For demo purposes, we'll simulate a successful login
+    // For demo purposes, accept any login
     localStorage.setItem('user', JSON.stringify({
-      email: data.email,
-      name: data.email.split('@')[0],
+      name: 'Demo User',
+      email: values.email,
       isLoggedIn: true
     }));
     
     toast({
-      title: "Success!",
-      description: "You've been logged in successfully.",
+      title: "Logged in successfully!",
+      description: "Welcome to AWS DevOps Academy.",
+      duration: 3000,
     });
     
+    // Redirect to dashboard
     navigate('/dashboard');
   };
 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      
-      <main className="flex-grow pt-24 md:pt-28">
-        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md my-12">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">Welcome Back</h1>
-            <p className="text-gray-600 mt-2">Log in to your LearnSphere account</p>
-          </div>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          placeholder="your.email@example.com" 
-                          {...field}
-                          className="pl-10" 
-                        />
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+      <main className="flex-grow pt-24 md:pt-28 flex items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your AWS DevOps Academy account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="john@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Password</FormLabel>
+                        <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                          Forgot password?
+                        </Link>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder="••••••••" 
-                          {...field}
-                          className="pl-10" 
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder="********" 
+                            {...field} 
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full px-3"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="rememberMe"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-10 w-10 px-0"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? 
-                            <EyeOff className="h-4 w-4 text-gray-400" /> : 
-                            <Eye className="h-4 w-4 text-gray-400" />
-                          }
-                        </Button>
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Remember me</FormLabel>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="remember"
-                    className="rounded text-primary focus:ring-primary"
-                  />
-                  <Label htmlFor="remember" className="text-sm">Remember me</Label>
+                    </FormItem>
+                  )}
+                />
+                
+                <Button type="submit" className="w-full">
+                  Sign in
+                </Button>
+              </form>
+            </Form>
+
+            <div className="mt-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
                 </div>
-                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Forgot password?
-                </Link>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
               </div>
-              
-              <Button type="submit" className="w-full">
-                Log in
-              </Button>
-            </form>
-          </Form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Button variant="outline" type="button">
+                  Google
+                </Button>
+                <Button variant="outline" type="button">
+                  GitHub
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline">
+              <Link to="/signup" className="text-primary font-medium hover:underline">
                 Sign up
               </Link>
             </p>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </main>
-      
       <Footer />
     </div>
   );
